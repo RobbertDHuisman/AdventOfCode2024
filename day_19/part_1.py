@@ -22,10 +22,10 @@ def check_pattern_possible(pattern, towels):
     current_pattern = possible_patterns[0]
     pattern_found = 0
 
-    while pattern_found == 0 or possible_patterns == []:
+    while pattern_found == 0 and possible_patterns != []:
         for i in towels:
-            new_pattern = current_pattern + i
-            if new_pattern == pattern[0:len(new_pattern) + 1]:
+            new_pattern = (current_pattern.strip() + i.strip()).strip()
+            if new_pattern == pattern[0:len(new_pattern)] and new_pattern not in possible_patterns:
                 possible_patterns.append(new_pattern)
 
         possible_patterns.remove(current_pattern)
@@ -42,14 +42,12 @@ def check_pattern_possible(pattern, towels):
         return False
 
 def main():
-    towels, patterns = load_data("example.csv")
-    print(towels, patterns)
+    towels, patterns = load_data("input.csv")
     patterns_possible = []
     for i in patterns:
         if check_pattern_possible(i, towels):
             patterns_possible.append(i)
-            print(f"this pattern in possible: {i}")
     
     print(len(patterns_possible))
 
-main()
+# main()
