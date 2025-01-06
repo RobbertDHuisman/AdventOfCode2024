@@ -1,5 +1,5 @@
 import csv
-from tqdm import tqdm
+from functools import cache
 
 def load_data(filename):
     code = []
@@ -122,13 +122,11 @@ def find_shortest_sequences(sequences):
     return short_sequences
 
 def find_new_sequences(string, options):
-    # print(string)
     sequences = [""]
 
     for i in range(1, len(string)):
         for j in range(len(sequences) - 1, -1, -1):
             for k in options:
-                # print(string[i], sequences[j], k)
                 if string[i-1] == k[0][0] and string[i] == k[0][1]:
                     for m in k[1]:
                         sequences.append(sequences[j] + m)
@@ -152,65 +150,56 @@ def find_similar_parts(sequences):
         else:
             similar_ranges.append(i)
 
-def find_directional_sequences(sequences, numerical_option, directional_option, number_of_recursions, total_number_of_recursions):
-    # print(f"number of recursions is {number_of_recursions} ------------------------------")
+@cache
+def find_directional_sequences(sequence, number_of_recursions, total_number_of_recursions):
     if number_of_recursions == total_number_of_recursions:
-        complexity = []
-        with tqdm(total=4) as pbar:
-            for i in sequences:
-                pbar.update(1)
-                # print(i)
-                i = "A" + i
-                lengths = []                
-                for j in range(0, len(i) - 1):
-                    # print(i[j:j+2])
-                    new_sequences = find_new_sequences(i[j:j+2], numerical_option)
-                    lengths.append(min(find_directional_sequences(new_sequences, numerical_option, directional_option, number_of_recursions - 1, total_number_of_recursions)))
-                    print(f"at the highest level {number_of_recursions} for sequence {i} the lengths are = {lengths} --------------------------")
+        lengths_at_top = []                
+        for j in range(0, len(sequence) - 1):
+            new_sequences = find_new_sequences(sequence[j:j+2], numerical_options())
+            sum_lengths = []
+            for k in new_sequences:
+                k = "A" + k
+                sum_lengths.append(find_directional_sequences(k, number_of_recursions - 1, total_number_of_recursions))
 
-                complexity.append(sum(lengths) * int(i[1:-1]))
-            return complexity
+            lengths_at_top.append(min(sum_lengths))
 
+        return sum(lengths_at_top)
+    
     elif number_of_recursions > 0:
-        sum_lengths = []
-        for k in sequences:
-            k = "A" + k
-            lengths = []                
-            for m in range(0, len(k) - 1):
-                new_sequences = find_new_sequences(k[m:m+2], directional_option)
-                lengths.append(min(find_directional_sequences(new_sequences, numerical_option, directional_option, number_of_recursions - 1, total_number_of_recursions)))
-            sum_lengths.append(sum(lengths))
-            # print(f"at level {number_of_recursions} for sequence {k} the sum lengths = {sum_lengths} --------------------------")
+        lengths = []                
+        for m in range(0, len(sequence) - 1):
+            new_sequences = find_new_sequences(sequence[m:m+2], directional_options())
+            sum_lengths_final = []
+            for n in new_sequences:
+                n = "A" + n
+                sum_lengths_final.append(find_directional_sequences(n, number_of_recursions - 1, total_number_of_recursions))
+            lengths.append(min(sum_lengths_final))  
         
-        return sum_lengths
+        return sum(lengths)
 
     else:
-        sum_lengths_final = []
-        # print(sequences)
-        for n in sequences:
-            n = "A" + n
-            lengths_final = []
-            for o in range(0, len(n) - 1):
-                final_sequence = find_new_sequences(n[o:o+2], directional_option)
+        lengths_final = []
+        for o in range(0, len(sequence) - 1):
+            final_sequence = find_new_sequences(sequence[o:o+2], directional_options())
 
-                length = len(final_sequence[0])
-                for p in final_sequence:
-                    if len(p) < length:
-                        length = len(p)
-                lengths_final.append(length)
+            length = len(final_sequence[0])
+            for p in final_sequence:
+                if len(p) < length:
+                    length = len(p)
+            lengths_final.append(length)
 
-            sum_lengths_final.append(sum(lengths_final))
-        print(f"the sequence is {n}, the sum of lengths = {sum_lengths_final}")
-
-        return sum_lengths_final
+        return sum(lengths_final)
 
 
 def main():
-    codes = load_data("example.csv")
-    numerical_option = numerical_options()
-    directional_option = directional_options()
-    nr_recursions = 2
-    complexity = find_directional_sequences(codes, numerical_option, directional_option, nr_recursions, nr_recursions)
+    codes = load_data("input.csv")
+    nr_recursions = 25
+    complexity = []
+    
+    for i in codes:
+        i = "A" + i
+        total_length = find_directional_sequences(i, nr_recursions, nr_recursions)
+        complexity.append(total_length * int(i[1:-1]))
 
     print(sum(complexity))
 

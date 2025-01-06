@@ -150,7 +150,7 @@ def find_similar_parts(sequences):
             similar_ranges.append(i)
 
 def main():
-    codes = load_data("example.csv")[0:1]
+    codes = load_data("input.csv")
     numerical_option = numerical_options()
     directional_option = directional_options()
     complexity = []
